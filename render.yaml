@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: bookstore-backend
+    env: node
+    buildCommand: npm install && cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
