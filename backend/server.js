@@ -167,7 +167,8 @@ pool
     console.log("Connected to PostgreSQL database");
     await createTables();
     await seedBooks();
-    app.listen(5000, () => console.log("Books API running on port 5000"));
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`Books API running on port ${PORT}`));
   })
   .catch((err) => console.error("PostgreSQL connection error:", err));
 
@@ -271,12 +272,10 @@ app.post("/api/auth/register", async (req, res) => {
       expiresIn: "7d",
     },
   );
-  res
-    .status(201)
-    .json({
-      token,
-      user: { id: result.rows[0].id, firstName, lastName, email },
-    });
+  res.status(201).json({
+    token,
+    user: { id: result.rows[0].id, firstName, lastName, email },
+  });
 });
 
 app.post("/api/auth/login", async (req, res) => {
