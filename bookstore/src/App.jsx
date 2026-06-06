@@ -42,7 +42,7 @@ function BookCard({ book, cartItem, onAddToCart, onEdit, onDelete }) {
         </button>
         <div className="card-ops">
           <button className="icon-btn" onClick={() => onEdit(book)} title="Edit">✏️</button>
-          <button className="icon-btn delete" onClick={() => onDelete(book._id)} title="Delete">🗑️</button>
+          <button className="icon-btn delete" onClick={() => onDelete(book.id)} title="Delete">🗑️</button>
         </div>
       </div>
     </div>
@@ -67,16 +67,16 @@ function CartPanel({ cart, onChangeQty, onRemove, onClear }) {
           {cart.map((item) => {
             const p = price(item.book.price);
             return (
-              <div key={item.book._id} className="cart-item">
+              <div key={item.book.id} className="cart-item">
                 <div className="cart-item-info">
                   <h4>{item.book.title}</h4>
                   <p>${p.toFixed(2)} × {item.qty} = ${(p * item.qty).toFixed(2)}</p>
                 </div>
                 <div className="qty-controls">
-                  <button className="qty-btn" onClick={() => onChangeQty(item.book._id, -1)}>−</button>
+                  <button className="qty-btn" onClick={() => onChangeQty(item.book.id, -1)}>−</button>
                   <span>{item.qty}</span>
-                  <button className="qty-btn" onClick={() => onChangeQty(item.book._id, 1)}>+</button>
-                  <button className="btn-remove" onClick={() => onRemove(item.book._id)} title="Remove">✕</button>
+                  <button className="qty-btn" onClick={() => onChangeQty(item.book.id, 1)}>+</button>
+                  <button className="btn-remove" onClick={() => onRemove(item.book.id)} title="Remove">✕</button>
                 </div>
               </div>
             );
@@ -193,7 +193,7 @@ function BooksPage({ user, onLogout, onSignUp, onLogin }) {
     setBooks(data);
     // sync cart book snapshots with fresh prices from the server
     setCart((prev) => prev.map((item) => {
-      const fresh = data.find((b) => b._id === item.book._id);
+      const fresh = data.find((b) => b.id === item.book.id);
       return fresh ? { ...item, book: fresh } : item;
     }));
     setLoading(false);
@@ -204,30 +204,30 @@ function BooksPage({ user, onLogout, onSignUp, onLogin }) {
     // normalize price at add-time so the cart snapshot always has a number
     const bookWithPrice = { ...book, price: Number(book.price) || 0 };
     setCart((prev) => {
-      const existing = prev.find((i) => i.book._id === bookWithPrice._id);
-      if (existing) return prev.map((i) => i.book._id === bookWithPrice._id ? { ...i, qty: i.qty + 1 } : i);
+      const existing = prev.find((i) => i.book.id === bookWithPrice.id);
+      if (existing) return prev.map((i) => i.book.id === bookWithPrice.id ? { ...i, qty: i.qty + 1 } : i);
       return [...prev, { book: bookWithPrice, qty: 1 }];
     });
   }
 
   function changeQty(id, delta) {
     setCart((prev) =>
-      prev.map((i) => i.book._id === id ? { ...i, qty: Math.max(1, i.qty + delta) } : i)
+      prev.map((i) => i.book.id === id ? { ...i, qty: Math.max(1, i.qty + delta) } : i)
     );
   }
 
-  function removeFromCart(id) { setCart((prev) => prev.filter((i) => i.book._id !== id)); }
+  function removeFromCart(id) { setCart((prev) => prev.filter((i) => i.book.id !== id)); }
   function clearCart()        { setCart([]); }
 
   // ── Book CRUD ───────────────────────────────────────────
   async function saveBook(e) {
     e.preventDefault();
-    const url    = editBook ? `${API}/books/${editBook._id}` : `${API}/books`;
+    const url    = editBook ? `${API}/books/${editBook.id}` : `${API}/books`;
     const method = editBook ? "PUT" : "POST";
     const res    = await authFetch(url, { method, body: JSON.stringify(form) });
     const data   = await res.json();
     if (!res.ok) return alert(data.message);
-    if (editBook) setBooks((prev) => prev.map((b) => b._id === data._id ? data : b));
+    if (editBook) setBooks((prev) => prev.map((b) => b.id === data.id ? data : b));
     else          setBooks((prev) => [...prev, data]);
     closeForm();
   }
@@ -235,8 +235,8 @@ function BooksPage({ user, onLogout, onSignUp, onLogin }) {
   async function deleteBook(id) {
     if (!window.confirm("Delete this book?")) return;
     await authFetch(`${API}/books/${id}`, { method: "DELETE" });
-    setBooks((prev) => prev.filter((b) => b._id !== id));
-    setCart((prev) => prev.filter((i) => i.book._id !== id));
+    setBooks((prev) => prev.filter((b) => b.id !== id));
+    setCart((prev) => prev.filter((i) => i.book.id !== id));
   }
 
   function startEdit(book) {
@@ -330,9 +330,9 @@ function BooksPage({ user, onLogout, onSignUp, onLogin }) {
             <div className="book-grid">
               {filtered.map((book) => (
                 <BookCard
-                  key={book._id}
+                  key={book.id}
                   book={book}
-                  cartItem={cart.find((i) => i.book._id === book._id)}
+                  cartItem={cart.find((i) => i.book.id === book.id)}
                   onAddToCart={addToCart}
                   onEdit={startEdit}
                   onDelete={deleteBook}
